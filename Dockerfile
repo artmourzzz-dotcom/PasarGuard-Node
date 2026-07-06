@@ -15,14 +15,17 @@ RUN GOOS=${TARGETOS} GOARCH=${TARGETARCH} make install_xray
 
 # ساخت گواهی خودامضا (self-signed) که هم داخل ایمیج نود می‌ماند (برای TLS)
 # و هم محتوایش باید در فیلد "Server CA" پنل کپی شود.
+# دامنه TCP Proxy که Railway به این سرویس می‌دهد باید اینجا باشد وگرنه
+# پنل هنگام اتصال خطای "Hostname mismatch" می‌دهد.
+ARG NODE_DOMAIN=hayabusa.proxy.rlwy.net
 RUN mkdir -p /src/certs && \
     openssl req -x509 -newkey ec \
         -pkeyopt ec_paramgen_curve:P-256 \
         -keyout /src/certs/ssl_key.pem \
         -out /src/certs/ssl_cert.pem \
         -days 3650 -nodes \
-        -subj "/CN=pasarguard-node" \
-        -addext "subjectAltName = DNS:localhost,IP:127.0.0.1"
+        -subj "/CN=${NODE_DOMAIN}" \
+        -addext "subjectAltName = DNS:${NODE_DOMAIN},DNS:localhost,IP:127.0.0.1"
 
 FROM alpine:latest
 
